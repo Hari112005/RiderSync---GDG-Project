@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         Int     @id @default(autoincrement())
+  name       String
+  email      String  @unique
+  password   String
+  phone      String
+  role       String // "rider" or "driver"
+  profilePic String?
+
+  // Relations
+  ridesAsRider  Ride[]    @relation("Rider") // A user can be a rider in many rides
+  ridesAsDriver Ride[]    @relation("Driver") // A user can be a driver in many rides
+  payments      Payment[]
+}
+
+model Ride {
+  id          Int    @id @default(autoincrement())
+  riderId     Int
+  driverId    Int?
+  pickup      String
+  destination String
+  fare        Float
+  status      String // "pending", "accepted", "completed", "cancelled"
+
+  // Relations
+  rider   User     @relation("Rider", fields: [riderId], references: [id])
+  driver  User?    @relation("Driver", fields: [driverId], references: [id])
+  payment Payment?
+}
+
+model Payment {
+  id     Int    @id @default(autoincrement())
+  rideId Int    @unique
+  userId Int
+  amount Float
+  status String // "pending", "completed"
+
+  // Relations
+  ride Ride @relation(fields: [rideId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+}
